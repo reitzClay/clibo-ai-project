@@ -1,0 +1,20 @@
+# Java/Quarkus
+target/
+*.class
+*.marshal
+.vercel
+.quarkus/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI/Python
+__pycache__/
+.venv/
+.conda/
