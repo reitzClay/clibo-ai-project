@@ -2,9 +2,11 @@ package nl.claybytes.clibo.api.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
 
+/**
+ * ChatResponse: The communication packet sent from the Brain to the UI.
+ */
 @RegisterForReflection
 public record ChatResponse(
     String reply,
@@ -12,11 +14,18 @@ public record ChatResponse(
     Instant timestamp,
     Map<String, String> metadata
 ) {
-    public ChatResponse(String reply) {
-        this(reply, "idle", Instant.now(), Collections.emptyMap());
+    /**
+     * Helper constructor to match the Resource's 3-argument call.
+     * Automatically injects the current timestamp.
+     */
+    public ChatResponse(String reply, String status, Map<String, String> metadata) {
+        this(reply, status, Instant.now(), metadata);
     }
 
-    public ChatResponse(String reply, String status) {
-        this(reply, status, Instant.now(), Collections.emptyMap());
+    /**
+     * Minimal constructor for simple replies.
+     */
+    public ChatResponse(String reply) {
+        this(reply, "idle", Instant.now(), null);
     }
 }
