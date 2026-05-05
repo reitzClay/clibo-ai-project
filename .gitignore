@@ -1,20 +1,41 @@
-# Java/Quarkus
-target/
-*.class
-*.marshal
-.vercel
-.quarkus/
-
-# IDEs
-.idea/
-.vscode/
-*.swp
-
-# OS
+# --- Master Engineering Global Ignores ---
 .DS_Store
 Thumbs.db
+*.swp
+*.log
 
-# AI/Python
-__pycache__/
-.venv/
-.conda/
+# --- IDEs ---
+.idea/
+.vscode/
+*.iml
+
+# --- Quarkus / Java (Backend) ---
+**/target/
+**/.quarkus/
+*.class
+*.marshal
+.vercel/
+
+# --- Flutter / Dart (Frontend) ---
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/linux/
+**/windows/
+**/macos/
+**/android/.gradle/
+**/ios/.pods/
+
+# --- AI / Python (Workers) ---
+**/__pycache__/
+**/.venv/
+**/.conda/
+**/.ipynb_checkpoints/
+*.pyc
+
+# --- Infrastructure ---
+# We keep the .yml but ignore the data volumes
+**/infra/docker-compose/postgres_data/
+**/infra/docker-compose/kafka_data/
