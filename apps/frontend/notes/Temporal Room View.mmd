@@ -1,0 +1,10 @@
+graph TD
+    subgraph RoomView [Temporal Room View]
+        TimeHeader[Hour Header] --> LayerContainer[Stack-based Minute Grid]
+        
+        subgraph MinuteGrid [60-Minute Vertical Track]
+            BackgroundLines[Subtle 15-min Grid Lines]
+            BackgroundLines --- PhysicalSeed[Physical Seed: Left Aligned]
+            BackgroundLines --- MediaSeed[Media Seed: Right Aligned / Overlap]
+        end
+    end

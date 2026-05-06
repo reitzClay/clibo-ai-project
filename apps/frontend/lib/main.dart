@@ -5,6 +5,7 @@ import 'features/clibo_ai/data/repositories/CliboRepositoryImpl.dart';
 import 'features/clibo_ai/presentation/manager/clibo_cubit.dart';
 import 'features/clibo_ai/presentation/pages/clibo_dashboard_page.dart';
 import 'features/clibo_ai/presentation/widgets/samsung_surface_fixer.dart';
+import 'core/theme/species_theme.dart'; // Assumes you saved the palette here
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +16,14 @@ void main() {
 void overlayMain() {
   WidgetsFlutterBinding.ensureInitialized();
   final repo = CliboRepositoryImpl(CliboSocketProvider());
+  
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
+    // Maintaining theme consistency for the overlay
+    theme: ThemeData.dark(useMaterial3: true).copyWith(
+      scaffoldBackgroundColor: const Color(0xFF0D0221),
+      extensions: const [SpeciesTheme.dark],
+    ),
     home: SamsungSurfaceFixer(cubit: CliboCubit(repository: repo)),
   ));
 }
@@ -32,7 +39,15 @@ class CliboApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(useMaterial3: true).copyWith(
           scaffoldBackgroundColor: const Color(0xFF0D0221),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark, secondary: Colors.cyanAccent),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple, 
+            brightness: Brightness.dark, 
+            secondary: Colors.cyanAccent,
+          ),
+          // Integrating the S.P.E.C.I.E.S. palette as a ThemeExtension
+          extensions: const [
+            SpeciesTheme.dark,
+          ],
         ),
         home: const CliboDashboardPage(),
       ),
