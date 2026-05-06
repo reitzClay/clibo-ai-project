@@ -1,0 +1,1 @@
+// should be mirrored here as classes with fromJson/toJson methods.
