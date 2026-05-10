@@ -5,49 +5,49 @@ import 'features/clibo_ai/data/repositories/CliboRepositoryImpl.dart';
 import 'features/clibo_ai/presentation/manager/clibo_cubit.dart';
 import 'features/clibo_ai/presentation/pages/clibo_dashboard_page.dart';
 import 'features/clibo_ai/presentation/widgets/samsung_surface_fixer.dart';
-import 'core/theme/species_theme.dart'; // Assumes you saved the palette here
+import 'core/theme/species_theme.dart';
+ 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CliboApp());
+
+  // 1. Initialize the Single Source of Truth
+  final socketProvider = CliboSocketProvider()..connect(); // Start connection
+  final repository = CliboRepositoryImpl(socketProvider);
+  final cliboCubit = CliboCubit(repository: repository)..startPulsing();
+
+  runApp(CliboApp(cubit: cliboCubit));
 }
 
 @pragma("vm:entry-point")
 void overlayMain() {
   WidgetsFlutterBinding.ensureInitialized();
-  final repo = CliboRepositoryImpl(CliboSocketProvider());
+  
+  // 2. Overlay entry point uses its own heartbeat
+  final socketProvider = CliboSocketProvider()..connect();
+  final repo = CliboRepositoryImpl(socketProvider);
+  final cubit = CliboCubit(repository: repo)..startPulsing();
   
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    // Maintaining theme consistency for the overlay
-    theme: ThemeData.dark(useMaterial3: true).copyWith(
-      scaffoldBackgroundColor: const Color(0xFF0D0221),
-      extensions: const [SpeciesTheme.dark],
-    ),
-    home: SamsungSurfaceFixer(cubit: CliboCubit(repository: repo)),
+    theme: ThemeData.dark(useMaterial3: true),
+    // The Fixer ensures Samsung screens don't flicker during the overlay
+    home: SamsungSurfaceFixer(cubit: cubit),
   ));
 }
 
 class CliboApp extends StatelessWidget {
-  const CliboApp({super.key});
+  final CliboCubit cubit;
+  const CliboApp({super.key, required this.cubit});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => CliboCubit(repository: CliboRepositoryImpl(CliboSocketProvider())),
+    return BlocProvider.value(
+      value: cubit, // Use .value so it doesn't close the cubit we created in main
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(useMaterial3: true).copyWith(
           scaffoldBackgroundColor: const Color(0xFF0D0221),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepPurple, 
-            brightness: Brightness.dark, 
-            secondary: Colors.cyanAccent,
-          ),
-          // Integrating the S.P.E.C.I.E.S. palette as a ThemeExtension
-          extensions: const [
-            SpeciesTheme.dark,
-          ],
         ),
         home: const CliboDashboardPage(),
       ),

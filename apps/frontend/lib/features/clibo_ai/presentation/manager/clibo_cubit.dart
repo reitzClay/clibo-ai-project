@@ -2,39 +2,50 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/ICliboRepository.dart';
 import '../../domain/entities/clibo_ui_state.dart';
+import '../../data/models/pulse_event_model.dart'; 
+import '../../domain/entities/temporal_block.dart';
+
 
 class CliboCubit extends Cubit<CliboUiState> {
   final ICliboRepository repository;
   StreamSubscription? _pulseSubscription;
 
-  // Removed _initPulse() from constructor to prevent Isolate Hang
   CliboCubit({required this.repository}) : super(CliboUiState.initial());
 
-  /// Explicitly start connection logic after UI mount
   void startPulsing() {
     _pulseSubscription?.cancel();
     _pulseSubscription = repository.pulseStream.listen(
-      (event) {
-        emit(state.copyWith(
-          status: CliboStatus.idle,
-          currentPulse: event.toString(),
-        ));
-      },
-      onError: (err) {
-        emit(state.copyWith(status: CliboStatus.error, lastReply: "Pulse Lost."));
-      },
+      (event) => _handleIncomingPulse(event),
+      onError: (err) => emit(state.copyWith(errorMessage: "Pulse Lost.")),
     );
   }
 
+  void _handleIncomingPulse(dynamic event) {
+    // If the backend sends a list of blocks (The Negotiator's output)
+    if (event is Map<String, dynamic> && event.containsKey('suggestedSchedule')) {
+      final List rawBlocks = event['suggestedSchedule'];
+      final newBlocks = rawBlocks.map((b) => TemporalBlockModel.fromJson(b)).toList();
+      
+      emit(state.copyWith(
+        timeline: newBlocks, // This updates your Horizontal Time Bar
+        isPulsing: false,    // Stop the Lottie 'thinking' animation
+      ));
+    } else {
+      // Handle simple text pulses/vitals
+      print("Heartbeat received: $event");
+    }
+  }
+
   Future<void> sendImpulse(String message, {String? visionData}) async {
-    if (message.isEmpty && visionData == null) return;
-    emit(state.copyWith(status: CliboStatus.thinking, lastReply: "Thinking..."));
+    // Trigger the 'blob.json' pulsing animation immediately
+    emit(state.copyWith(isPulsing: true));
 
     try {
       final reply = await repository.postImpulse(message, vision: visionData);
-      emit(state.copyWith(status: CliboStatus.replyReceived, lastReply: reply));
+      // We don't necessarily set isPulsing to false here because 
+      // the real 'answer' comes back via the WebSocket pulseStream.
     } catch (e) {
-      emit(state.copyWith(status: CliboStatus.error, lastReply: "Path severed."));
+      emit(state.copyWith(isPulsing: false, errorMessage: "Path severed."));
     }
   }
 

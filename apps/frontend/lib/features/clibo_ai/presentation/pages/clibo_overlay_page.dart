@@ -3,45 +3,41 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../manager/clibo_cubit.dart';
 import '../../domain/entities/clibo_ui_state.dart';
 import '../widgets/ghost_visual.dart';
-import '../widgets/bubble.dart';
-import '../widgets/controls.dart';
 
 class CliboOverlayPage extends StatelessWidget {
   const CliboOverlayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Material is required for text styling, but we keep it transparent
     return Material(
       color: Colors.transparent,
       child: BlocBuilder<CliboCubit, CliboUiState>(
         builder: (context, state) {
-          return Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.75),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.cyanAccent.withOpacity(0.2)),
-            ),
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 👻 Delegated to specialized widget
+                // The Vagus Nerve Visualizer
                 GhostVisual(
                   pulseLabel: state.currentPulse,
-                  isAnimating: state.status == CliboStatus.thinking || state.currentPulse != "IDLE",
+                  isPulsing: state.isPulsing || state.status == CliboStatus.thinking,
                 ),
-                const SizedBox(height: 10),
                 
-                // 💬 Delegated to bubble widget
-                CliboBubble(text: state.lastReply),
-                const SizedBox(height: 20),
-                
-                // ⚡ Delegated to controls widget
-                CliboControls(
-                  isConnecting: state.status == CliboStatus.connecting,
-                  onSend: (msg) => context.read<CliboCubit>().sendImpulse(msg),
-                ),
+                // Minimal text feedback for the "Impulse" reply
+                if (state.lastReply.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    child: Text(
+                      state.lastReply,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
           );
