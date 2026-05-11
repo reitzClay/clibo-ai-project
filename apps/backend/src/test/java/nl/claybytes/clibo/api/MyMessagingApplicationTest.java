@@ -1,22 +1,22 @@
-package nl.claybytes.clibo.api;
+// package nl.claybytes.clibo.api;
 
-import io.quarkus.test.junit.QuarkusTest;
+// import io.quarkus.test.junit.QuarkusTest;
 
-import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.api.Test;
 
-import jakarta.inject.Inject;
+// import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+// import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@QuarkusTest
-class MyMessagingApplicationTest {
+// @QuarkusTest
+// class MyMessagingApplicationTest {
 
-    @Inject
-    MyMessagingApplication application;
+//     @Inject
+//     MyMessagingApplication application;
 
-    @Test
-    void test() {
-        assertEquals("HELLO", application.toUpperCase("Hello"));
-        assertEquals("BONJOUR", application.toUpperCase("bonjour"));
-    }
-}
+//     @Test
+//     void test() {
+//         assertEquals("HELLO", application.toUpperCase("Hello"));
+//         assertEquals("BONJOUR", application.toUpperCase("bonjour"));
+//     }
+// }

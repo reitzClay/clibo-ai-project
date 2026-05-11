@@ -16,63 +16,75 @@ class CliboDashboardPage extends StatefulWidget {
 }
 
 class _CliboDashboardPageState extends State<CliboDashboardPage> {
-  // We keep local selection for UI focus, but pull DATA from the Cubit
   int _selectedHourIdx = DateTime.now().hour;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CliboCubit, CliboUiState>(
       builder: (context, state) {
-        // FILTER: Find blocks that match the selected hour
-        // Note: Real logic would compare DateTime objects from state.timeline
         final activeBlocks = state.timeline.where((block) {
           return block.startTime.hour == (_selectedHourIdx % 24);
         }).toList();
 
-        final bool hasData = activeBlocks.isNotEmpty;
-
         return Scaffold(
-          extendBody: true,
+          extendBodyBehindAppBar: true,
+          backgroundColor: const Color(0xFF050505),
           appBar: AppBar(
-            title: const Text("CLIBO S.P.E.C.I.E.S.", 
-              style: TextStyle(letterSpacing: 4, fontWeight: FontWeight.w900, fontSize: 16)),
+            title: const Text(
+              "CLIBO S.P.E.C.I.E.S.",
+              style: TextStyle(
+                letterSpacing: 4,
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.sync,
+                  color: state.isPulsing ? Colors.cyanAccent : Colors.white24,
+                  size: 18,
+                ),
+                onPressed: () => context.read<CliboCubit>().syncTemporalData(),
+              ),
+            ],
           ),
           drawer: const CliboDrawer(),
           body: Stack(
             children: [
               _buildBackgroundAura(),
-              // reactive Pulse indicator (The Vagus Nerve)
-              if (state.isPulsing) _buildPulseOverlay(), 
+              if (state.isPulsing) _buildPulseOverlay(),
               
-              Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  child: Padding(
-                    key: ValueKey<int>(_selectedHourIdx),
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Hero(
-                          tag: 'goal_block_$_selectedHourIdx',
-                          child: Icon(
-                            hasData ? Icons.auto_awesome_motion : Icons.radio_button_unchecked,
-                            color: hasData ? Colors.cyanAccent : Colors.white10,
-                            size: 45,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        // Real data from Quarkus flowing here
-                        TemporalRoomView(
+              SafeArea(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildTemporalHeader(),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: animation.drive(Tween(begin: 0.98, end: 1.0)),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: TemporalRoomView(
+                          key: ValueKey<int>(_selectedHourIdx),
                           hourIdx: _selectedHourIdx,
-                          blocks: activeBlocks, 
+                          blocks: activeBlocks,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -86,30 +98,59 @@ class _CliboDashboardPageState extends State<CliboDashboardPage> {
               },
             ),
           ),
-
         );
       },
+    );
+  }
+
+  Widget _buildTemporalHeader() {
+    return Column(
+      children: [
+        Text(
+          "TEMPORAL DOMAIN",
+          style: TextStyle(
+            color: Colors.cyanAccent.withOpacity(0.5),
+            fontSize: 10,
+            letterSpacing: 3,
+          ),
+        ),
+        Text(
+          "${(_selectedHourIdx % 24).toString().padLeft(2, '0')}:00",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.w100,
+            letterSpacing: 2,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildPulseOverlay() {
     return Positioned.fill(
       child: Container(
-        color: Colors.cyanAccent.withOpacity(0.02),
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 1)),
+        color: Colors.black.withOpacity(0.4),
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 1,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildBackgroundAura() {
-    return Positioned(
-      top: -50, left: -50,
+    return Positioned.fill(
       child: Container(
-        width: 250, height: 250, 
-        decoration: BoxDecoration(
-          shape: BoxShape.circle, 
-          color: Colors.cyanAccent.withOpacity(0.05)
-        )
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.2,
+            colors: [Color(0xFF0A192F), Colors.black],
+          ),
+        ),
       ),
     );
   }

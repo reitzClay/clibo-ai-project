@@ -9,8 +9,9 @@ import java.util.List;
 @ApplicationScoped
 public class TemporalBlockRepository implements PanacheRepository<TemporalBlock> {
 
-    // Find any block that overlaps with a proposed time range
     public List<TemporalBlock> findOverlappingBlocks(LocalDateTime start, LocalDateTime end) {
-        return list("startTime < ?2 AND endTime > ?1", start, end);
+        // Logic: A block overlaps if it starts before the new one ends 
+        // AND ends after the new one starts.
+        return list("startTime < ?2 and endTime > ?1", start, end);
     }
 }

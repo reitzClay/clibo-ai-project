@@ -25,10 +25,10 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
   # The Event Bus (Kafka)
-  kafka:
-    image: apache/kafka-native:4.2.0
-    ports:
-      - "9092:9092"
+  # kafka:
+  #   image: apache/kafka-native:4.2.0
+  #   ports:
+  #     - "9092:9092"
 
   # The database tools (pgadmin)
   pgadmin:

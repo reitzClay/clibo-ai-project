@@ -1,14 +1,16 @@
+// src/main/java/nl/claybytes/clibo/api/infrastructure/external/CliboResource.java
+
 package nl.claybytes.clibo.api.infrastructure.external;
 
 import dev.langchain4j.data.image.Image;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import nl.claybytes.clibo.api.domain.service.CliboAiService;
 import nl.claybytes.clibo.api.dto.ChatRequest;
 import nl.claybytes.clibo.api.dto.ChatResponse;
+import nl.claybytes.clibo.api.dto.PulseEvent;
+import nl.claybytes.clibo.api.infrastructure.messaging.CliboWebSocket;
 
 import java.util.Map;
 
@@ -16,50 +18,59 @@ import java.util.Map;
 public class CliboResource {
 
     @Inject
-    CliboAiService brain;
+    CliboAiService.Brain brain; // Uses the wrapper for DB context awareness
 
     @Inject
-    @Channel("clibo-vitals")
-    Emitter<String> vitalsEmitter;
+    CliboWebSocket pulseSocket;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ChatResponse receiveImpulse(ChatRequest request) {
-        String aiData;
+        String reply;
         String status;
 
         try {
-            // 1. Vision Logic: If media is present, alert the Vagus Nerve and process pixels
+            // 1. Perception Logic: Handle Vision data if present
             if (request.base64Media() != null && !request.base64Media().isBlank()) {
-                vitalsEmitter.send("PERCEPTION_ACTIVE");
+                broadcastPulse("PERCEPTION_ACTIVE", 0.9, "Analyzing Visual Input...");
                 
                 Image image = Image.builder()
                         .base64Data(request.base64Media())
                         .build();
 
-                aiData = brain.processVision(request.message(), image);
+                reply = brain.processVision(request.message(), image);
                 status = "vision_analyzed";
             } 
-            // 2. Text Logic: Standard thinking pulse
+            // 2. Cognition Logic: Standard AI text processing
             else {
-                vitalsEmitter.send("THINKING");
-                aiData = brain.process(request.message());
+                broadcastPulse("THINKING", 0.5, "Processing Cognitive Impulse...");
+                reply = brain.process(request.message());
                 status = "thought_complete";
             }
 
-            // 3. Reset Vagus Nerve to Idle
-            vitalsEmitter.send("IDLE");
-            
-            return new ChatResponse(aiData, status, Map.of("session", request.sessionId()));
+            broadcastPulse("IDLE", 0.2, "Cognitive Loop Resolved.");
+
+            // Returns the ChatResponse record (Assumes constructor: String reply, String status, Map metadata)
+            return new ChatResponse(reply, status, Map.of("session", request.sessionId()));
 
         } catch (Exception e) {
-            vitalsEmitter.send("ERROR");
-            return new ChatResponse(
-                "Brain Link shaky: " + e.getMessage(), 
-                "error_idle", 
-                Map.of("type", "exception")
-            );
+            broadcastPulse("ERROR", 1.0, "Brain Link Disturbed: " + e.getMessage());
+            // Assumes ChatResponse has a single-string constructor or handle accordingly
+            return new ChatResponse("Link Error: " + e.getMessage(), "failed", Map.of());
         }
+    }
+
+    /**
+     * Helper to broadcast real-time telemetry to Flutter widgets
+     */
+    private void broadcastPulse(String type, double intensity, String detail) {
+        PulseEvent pulse = new PulseEvent(
+            type, 
+            intensity, 
+            detail, 
+            System.currentTimeMillis()
+        );
+        pulseSocket.broadcastPulse(pulse);
     }
 }
